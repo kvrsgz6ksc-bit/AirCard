@@ -1,0 +1,23 @@
+name: Build IPA
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer les outils
+        run: |
+          brew install xcodegen
+          rustup target add aarch64-apple-ios aarch64-apple-ios-sim
+      - name: Recompiler la lib Rust depuis les sources
+        run: |
+          rm -rf AirliftFFI.xcframework
+          DEVELOPER_DIR="$(xcode-select -p)" bash ./build-ios.sh
+      - name: Generer le projet et construire l'IPA
+        run: |
+          xcodegen generate
+          bash ./build-ipa.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AirCard-iOS
+          path: build/AirCard-iOS.ipa
